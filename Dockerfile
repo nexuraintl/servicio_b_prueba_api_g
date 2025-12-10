@@ -15,4 +15,4 @@ COPY . .
 
 # Comando para iniciar el servidor usando Gunicorn (Mejor Práctica para Cloud Run)
 # Gunicorn utiliza el archivo 'app.py' y la variable 'app' (Flask app)
-CMD ["gunicorn", "--bind", "0.0.0.0:$PORT", "app:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8080", "app:app"]

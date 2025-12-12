@@ -8,7 +8,7 @@ from src.business_logic import process_data
 app = Flask(__name__)
 
 # Definición de la ruta
-@app.route('/api/v1/process/data', methods=['POST'])
+@app.route('/api/v1/special/task', methods=['POST'])
 def handle_request():
     
     # 🚨 Pauta de Seguridad y Contexto (Importante) 🚨

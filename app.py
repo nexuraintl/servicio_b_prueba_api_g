@@ -1,15 +1,13 @@
-# servicio-a/app.py
-
 import os
-from flask import Flask, request, jsonify, CORS
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+# Asegúrate de que este módulo existe en tu estructura de carpetas
 from src.business_logic import process_data
 
-
-# Flask se inicializa y Gunicorn lo utilizará
 app = Flask(__name__)
 
-# Definición de la ruta
-# ✅ HABILITA CORS
+# 1. CONFIGURACIÓN DE CORS COMPLETA
+# Se define a nivel de aplicación para capturar todas las rutas /api/
 CORS(
     app,
     resources={
@@ -18,33 +16,45 @@ CORS(
                 "https://mfe-angular-prueba-58937908768.us-central1.run.app"
             ],
             "methods": ["POST", "OPTIONS"],
-            "allow_headers": ["Authorization", "Content-Type"]
+            "allow_headers": ["Authorization", "Content-Type", "X-Client-Identifier"],
+            "max_age": 3600 # Cachear la respuesta de OPTIONS por 1 hora
         }
     }
 )
-@app.route('/api/v1/special/task', methods=['POST'])
+
+# 2. RUTA CON MÉTODOS EXPLÍCITOS
+# Es VITAL incluir 'OPTIONS' aquí para que flask-cors intercepte el preflight
+@app.route('/api/v1/special/task', methods=['POST', 'OPTIONS'])
 def handle_request():
-    
-    # 🚨 Pauta de Seguridad y Contexto (Importante) 🚨
-    # El API Gateway adjuntará la identidad autenticada 
-    # en un header especial. Usaremos un header de prueba por ahora.
-    # En producción, se usaría 'X-Apigw-Api-Key' o similares.
-    
-    # Simulación de extracción de un identificador del cliente (AuthN/AuthZ)
+    # Si la petición es OPTIONS, flask-cors ya respondió automáticamente antes de entrar aquí.
+    # No obstante, si entrara, devolvemos una respuesta vacía exitosa.
+    if request.method == 'OPTIONS':
+        return '', 204
+
+    # --- LÓGICA PARA EL MÉTODO POST ---
+
+    # Extraer identificador (enviado por el cliente o inyectado por el Gateway)
     client_id = request.headers.get('X-Client-Identifier', 'CLIENTE_DESCONOCIDO')
     
+    # Intentar obtener el cuerpo JSON
     try:
         input_data = request.get_json()
+        if input_data is None:
+            input_data = {}
     except Exception:
-        # Manejo de error si el cuerpo no es JSON válido
-        input_data = {'message': 'No JSON body provided'}
+        return jsonify({"error": "Invalid JSON body"}), 400
 
     # Invocación de la lógica de negocio modularizada
-    result = process_data(client_id, input_data)
-    
-    return jsonify({"status": "Servicio-A Ejecutado", "result": result}), 200
+    try:
+        result = process_data(client_id, input_data)
+        return jsonify({
+            "status": "Servicio-B Ejecutado", 
+            "result": result
+        }), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
-    # Cloud Run usa la variable de entorno PORT para la escucha
+    # Cloud Run usa la variable de entorno PORT
     port = int(os.environ.get('PORT', 8080))
     app.run(debug=True, host='0.0.0.0', port=port)

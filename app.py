@@ -1,13 +1,27 @@
 # servicio-a/app.py
 
 import os
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, CORS
 from src.business_logic import process_data
+
 
 # Flask se inicializa y Gunicorn lo utilizará
 app = Flask(__name__)
 
 # Definición de la ruta
+# ✅ HABILITA CORS
+CORS(
+    app,
+    resources={
+        r"/api/*": {
+            "origins": [
+                "https://mfe-angular-prueba-58937908768.us-central1.run.app"
+            ],
+            "methods": ["POST", "OPTIONS"],
+            "allow_headers": ["Authorization", "Content-Type"]
+        }
+    }
+)
 @app.route('/api/v1/special/task', methods=['POST'])
 def handle_request():
     

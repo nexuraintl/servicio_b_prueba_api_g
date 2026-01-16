@@ -13,7 +13,7 @@ CORS(
     resources={
         r"/api/*": {
             "origins": [
-                "https://mfe-angular-prueba-58937908768.us-central1.run.app"
+                "*"
             ],
             "methods": ["POST", "OPTIONS"],
             "allow_headers": ["Authorization", "Content-Type", "X-Client-Identifier"],
